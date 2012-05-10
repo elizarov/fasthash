@@ -4,14 +4,15 @@ import java.io.*;
 import java.util.Locale;
 
 import fasthash.model.Cache;
+import fasthash.model.Order;
 
 /**
  * @author Roman Elizarov
  */
 public class BenchmarkAccessSpeed {
-	private static final int PASSES = 10;
+	private static final int PASSES = 50;
 	private static final int STABLE_PASS = 3;
-	private static final long TARGET_TIME_NS = 1000000000; // 1sec
+	private static final int PASSES_PER_SEED = 3;
 
 	public static void main(String[] args) throws IOException {
 		if (args.length != 1) {
@@ -27,14 +28,11 @@ public class BenchmarkAccessSpeed {
 	}
 
 	private final String implClassName;
-	private final AccessSequence seq;
 	private final PrintWriter log;
 
 	public BenchmarkAccessSpeed(String implClassName, PrintWriter log) {
 		this.implClassName = implClassName;
 		this.log = log;
-		System.out.println("Creating access sequence...");
-		seq = new AccessSequence();
 	}
 
 	Cache createImpl() {
@@ -45,49 +43,50 @@ public class BenchmarkAccessSpeed {
 		}
 	}
 
+	private AccessSequence seq;
 	private Cache impl;
 	private int lastCheckSum;
 
 	private void go() {
-		System.out.println("Initializing " + implClassName + " ...");
-		init();
-		System.out.println("Initialized with " + impl.size() + " objects " + impl.describe());
-		assert impl.size() == seq.orders.size();
+		long nextSeed = AccessSequence.SEED0;
+		int nextInitPass = 1;
 		Stats stats = new Stats();
 		for (int pass = 1; pass <= PASSES; pass++) {
+			if (pass >=  nextInitPass) {
+				init(nextSeed++);
+				nextInitPass = pass + PASSES_PER_SEED;
+			}
 			System.out.printf(Locale.US, "PASS #%2d: ", pass);
-			double time = timePass(1);
-			int reps = Math.max(1, (int)(TARGET_TIME_NS / time));
-			if (reps > 1)
-				time = timePass(reps);
-			time /= seq.access.length;
-			System.out.printf(Locale.US, "[%4d reps] %.3f ns per item", reps, time);
+			double time = timePass();
+			System.out.printf(Locale.US, "%.3f ns per item", time);
 			if (pass >= STABLE_PASS) {
 				stats.add(time);
 				System.out.print(", avg " + stats);
-			}
+			} else
+				 nextInitPass++;
 			System.out.printf(Locale.US, " (checksum %d)%n", lastCheckSum);
 		}
 		log.printf(Locale.US, "%-30s %2d : %7.3f +- %7.3f with %d %d%n",
-			impl.describe(), stats.n(), stats.mean(), stats.dev(), AccessSequence.SEED, lastCheckSum);
+			impl.describe(), stats.n(), stats.mean(), stats.dev(), seq.seed, lastCheckSum);
 	}
 
-	private void init() {
+	private void init(long seed) {
+		System.out.println("Creating access sequence with seed " + seed + " ...");
+		seq = new AccessSequence(seed);
+		System.out.println("Initializing " + implClassName + " ...");
 		impl = createImpl();
-		for (Long id : seq.init)
-			if (impl.getById(id) == null)
-				impl.addObject(seq.orders.get(id));
+		for (Order order : seq.orders) {
+			assert impl.getById(order.getId()) == null;
+			impl.addObject(order);
+		}
+		assert impl.size() == seq.orders.size();
+		System.out.println("Initialized with " + impl.size() + " objects " + impl.describe());
 	}
 
-	private double timePass(int rep) {
+	private double timePass() {
 		long time = System.nanoTime();
-		makePass(rep);
-		return ((double)(System.nanoTime() - time)) / rep;
-	}
-
-	private void makePass(int rep) {
-		for (int i = 0; i < rep; i++)
-			lastCheckSum = accessOnce();
+		lastCheckSum = accessOnce();
+		return ((double)(System.nanoTime() - time)) / seq.access.length;
 	}
 
 	private int accessOnce() {

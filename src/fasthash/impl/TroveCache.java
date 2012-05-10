@@ -4,13 +4,19 @@ import fasthash.model.Cache;
 import fasthash.model.Order;
 import gnu.trove.map.hash.TLongObjectHashMap;
 
-public class TroveCache extends TLongObjectHashMap<Order> implements Cache {
+public class TroveCache implements Cache {
+	private final TLongObjectHashMap<Order> map = new TLongObjectHashMap<Order>();
+
+	public int size() {
+		return map.size();
+	}
+
 	public void addObject(Order order) {
-		put(order.getId(), order);
+		map.put(order.getId(), order);
 	}
 
 	public Order getById(long id) {
-		return get(id);
+		return map.get(id);
 	}
 
 	public String describe() {
