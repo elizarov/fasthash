@@ -17,6 +17,8 @@ public class AccessSequence {
 
 	public static final long SEED0 = 1234;
 
+	public static final boolean SCRAMBLE = Boolean.getBoolean("scramble");
+
 	public final long seed;
 
 	// access sequence -- native longs as required for Cache.getById method
@@ -25,16 +27,20 @@ public class AccessSequence {
 	// initialization sequence -- common layout for all algos
 	public final List<Order> orders = new ArrayList<Order>();
 
+	private long scramble(long id) {
+		return SCRAMBLE ? (id * 12501169) % 1600153859 : id;
+	}
+
 	public AccessSequence(long seed) {
 		this.seed = seed;
 		Random rnd = new Random(seed);
 		BitSet seen = new BitSet(LAST + 1);
 		for (int i = 0; i < N; i++) {
 			int id = LAST - (int)(Math.log(rnd.nextDouble()) / DIVISOR);
-			access[i] = id;
+			access[i] = scramble(id);
 			if (!seen.get(id)) {
 				seen.set(id);
-				orders.add(new Order(id, rnd.nextInt()));
+				orders.add(new Order(scramble(id), rnd.nextInt()));
 			}
 		}
 		shuffleAccess(rnd);
