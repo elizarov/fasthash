@@ -11,7 +11,7 @@ import gnu.trove.impl.PrimeFinder;
  */
 public class FastCache2 implements Cache {
 	private int size;
-	private Order[] a = new Order[7];
+	private Order[] a = new Order[13];
 
 	public int size() {
 		return size;

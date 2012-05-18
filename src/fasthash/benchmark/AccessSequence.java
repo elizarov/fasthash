@@ -27,6 +27,11 @@ public class AccessSequence {
 	// initialization sequence -- common layout for all algos
 	public final List<Order> orders = new ArrayList<Order>();
 
+	static {
+		if (SCRAMBLE)
+			System.out.println("Access sequence is scrambled");
+	}
+
 	private long scramble(long id) {
 		return SCRAMBLE ? (id * 12501169) % 1600153859 : id;
 	}
