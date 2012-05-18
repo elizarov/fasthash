@@ -66,13 +66,14 @@ public class BenchmarkAccessSpeed {
 				 nextInitPass++;
 			System.out.printf(Locale.US, " (checksum %d)%n", lastCheckSum);
 		}
-		log.printf(Locale.US, "%-30s %2d : %7.3f +- %7.3f with %d %d%n",
-			impl.describe(), stats.n(), stats.mean(), stats.dev(), seq.seed, lastCheckSum);
+		log.printf(Locale.US, "%-30s %2d : %7.3f +- %7.3f with %s (checksum %d)%n",
+			impl.describe(), stats.n(), stats.mean(), stats.dev(), seq, lastCheckSum);
 	}
 
 	private void init(long seed) {
 		System.out.println("Creating access sequence with seed " + seed + " ...");
 		seq = new AccessSequence(seed);
+		System.out.println("Created access sequence with seed " + seq);
 		System.out.println("Initializing " + implClassName + " ...");
 		impl = createImpl();
 		for (Order order : seq.orders) {

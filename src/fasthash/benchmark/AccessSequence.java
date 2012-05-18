@@ -27,11 +27,6 @@ public class AccessSequence {
 	// initialization sequence -- common layout for all algos
 	public final List<Order> orders = new ArrayList<Order>();
 
-	static {
-		if (SCRAMBLE)
-			System.out.println("Access sequence is scrambled");
-	}
-
 	private long scramble(long id) {
 		return SCRAMBLE ? (id * 12501169) % 1600153859 : id;
 	}
@@ -58,6 +53,15 @@ public class AccessSequence {
 			access[i] = access[j];
 			access[j] = t;
 		}
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append(seed);
+		if (SCRAMBLE)
+			sb.append(" scrambled");
+		return sb.toString();
 	}
 
 	// test method to check AccessSequence properties
