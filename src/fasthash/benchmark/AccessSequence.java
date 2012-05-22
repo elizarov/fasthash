@@ -28,7 +28,16 @@ public class AccessSequence {
 	public final List<Order> orders = new ArrayList<Order>();
 
 	private long scramble(long id) {
-		return SCRAMBLE ? (id * 12501169) % 1600153859 : id;
+		if (!SCRAMBLE)
+			return id;
+		// scramble ids, but keep them positive and in a reasonable range.
+		// note, that steps are reversible, to guarantee unique ids
+		id ^= 0x3F82CC9;
+		id += 599642;
+		id *= 746353;
+		id %= 1000000007;
+		id ^= 0xB440C0E;
+		return id;
 	}
 
 	public AccessSequence(long seed) {
@@ -40,7 +49,7 @@ public class AccessSequence {
 			access[i] = scramble(id);
 			if (!seen.get(id)) {
 				seen.set(id);
-				orders.add(new Order(scramble(id), rnd.nextInt()));
+				orders.add(new Order(access[i], rnd.nextInt()));
 			}
 		}
 		shuffleAccess(rnd);
