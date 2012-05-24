@@ -1,15 +1,14 @@
 package fasthash.impl;
 
-import java.util.Locale;
-
-import fasthash.model.Cache;
+import fasthash.model.AbstractCache;
 import fasthash.model.Order;
+import fasthash.stats.ProbeCounter;
 import gnu.trove.impl.PrimeFinder;
 
 /**
  * @author Roman Elizarov
  */
-public class FastCache2 implements Cache {
+public class FastCache2 extends AbstractCache {
 	private int size;
 	private Order[] a = new Order[13];
 
@@ -85,37 +84,43 @@ public class FastCache2 implements Cache {
 		return null;
 	}
 
-	String describe;
-
-	public String describe() {
-		if (describe == null) {
-			describe = String.format(Locale.US, "%s %.2f%%, %.4f",
-				getClass().getSimpleName(),
-				100.0 * size / a.length,
-				(double)totalDistance() / size );
-		}
-		return describe;
+	@Override
+	protected double getFillFactor() {
+		return (double)size / a.length;
 	}
 
-	private long totalDistance() {
-		long res = 0;
+	@Override
+	protected double countTotalProbes() {
+		ProbeCounter cnt = new ProbeCounter(0);
 		for (Order order : a)
-			if (order != null) {
-				long id = order.getId();
-				int hash = hash(id);
-				int index = index0(hash, a.length);
-				Order obj = a[index];
-				assert obj != null;
-				if (obj.getId() == id)
-					continue;
-				int step = step(hash, a.length);
-				res++;
-				while ((obj = a[index = next(index, step, a.length)]) != null) {
-					if (obj.getId() == id)
-						break;
-					res++;
-				}
-			}
-		return res;
+			if (order != null)
+				countProbes(order.getId(), cnt);
+		return cnt.getCount();
+	}
+
+	@Override
+	protected double countAccessProbes(long[] access, ProbeCounter cnt) {
+		for (long id : access)
+			countProbes(id, cnt);
+		return cnt.getCount();
+	}
+
+	private void countProbes(long id, ProbeCounter cnt) {
+		int hash = hash(id);
+		int index = index0(hash, a.length);
+		cnt.access(index);
+		Order obj = a[index];
+		assert obj != null;
+		if (obj.getId() == id)
+			return;
+		int step = step(hash, a.length);
+		index = next(index, step, a.length);
+		cnt.access(index);
+		while ((obj = a[index]) != null) {
+			if (obj.getId() == id)
+				break;
+			index = next(index, step, a.length);
+			cnt.access(index);
+		}
 	}
 }

@@ -1,14 +1,13 @@
 package fasthash.impl;
 
-import java.util.Locale;
-
-import fasthash.model.Cache;
+import fasthash.model.AbstractCache;
 import fasthash.model.Order;
+import fasthash.stats.ProbeCounter;
 
 /**
  * @author Roman Elizarov
  */
-public class FastCache implements Cache {
+public class FastCache extends AbstractCache {
 	private static final int MAGIC = 0x9E3779B9;
 
 	private static final int P = 8;
@@ -72,34 +71,37 @@ public class FastCache implements Cache {
 		return null;
 	}
 
-	String describe;
-
-	public String describe() {
-		if (describe == null) {
-			describe = String.format(Locale.US, "%s %.2f%%, %.3f",
-				getClass().getSimpleName(),
-				100.0 * size / a.length,
-				(double)totalDistance() / size );
-		}
-		return describe;
+	@Override
+	protected double getFillFactor() {
+		return (double)size / a.length;
 	}
 
-	private long totalDistance() {
-		long res = 0;
+	@Override
+	protected double countTotalProbes() {
+		ProbeCounter cnt = new ProbeCounter(0);
 		for (Order order : a)
-			if (order != null) {
-				long id = order.getId();
-				int index = hash(id);
-				Order obj;
-				while ((obj = a[index]) != null) {
-					if (obj.getId() == id)
-						break;
-					if (index == 0)
-						index = a.length;
-					index--;
-					res++;
-				}
-			}
-		return res;
+			if (order != null)
+				countProbes(order.getId(), cnt);
+		return cnt.getCount();
+	}
+
+	@Override
+	protected double countAccessProbes(long[] access, ProbeCounter cnt) {
+		for (long id : access)
+			countProbes(id, cnt);
+		return cnt.getCount();
+	}
+
+	private void countProbes(long id, ProbeCounter cnt) {
+		int index = hash(id);
+		Order obj;
+		cnt.access(index);
+		while ((obj = a[index]) != null) {
+			if (obj.getId() == id)
+				break;
+			if (index == 0)
+				index = a.length;
+			cnt.access(--index);
+		}
 	}
 }

@@ -1,13 +1,12 @@
 package fasthash.impl;
 
 import java.lang.reflect.Field;
-import java.util.Locale;
 
-import fasthash.model.Cache;
+import fasthash.model.AbstractCache;
 import fasthash.model.Order;
 import org.cliffc.high_scale_lib.NonBlockingHashMapLong;
 
-public class HighScaleCache implements Cache {
+public class HighScaleCache extends AbstractCache {
 	private final NonBlockingHashMapLong<Order> map = new NonBlockingHashMapLong<Order>();
 
 	public int size() {
@@ -22,7 +21,8 @@ public class HighScaleCache implements Cache {
 		return map.get(id);
 	}
 
-	public String describe() {
+	@Override
+	protected double getFillFactor() {
 		// We get into private fields to figure out hash capacity and to compute its fill factor.
 		int capacity;
 		try {
@@ -36,8 +36,6 @@ public class HighScaleCache implements Cache {
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
-		return String.format(Locale.US, "%s %.2f%%",
-			getClass().getSimpleName(),
-			100.0 * map.size() / capacity);
+		return (double)map.size() / capacity;
 	}
 }

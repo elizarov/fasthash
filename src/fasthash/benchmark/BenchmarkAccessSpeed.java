@@ -5,12 +5,14 @@ import java.util.Locale;
 
 import fasthash.model.Cache;
 import fasthash.model.Order;
+import fasthash.stats.CacheStats;
+import fasthash.stats.Stats;
 
 /**
  * @author Roman Elizarov
  */
 public class BenchmarkAccessSpeed {
-	private static final int PASSES = 50;
+	private static final int PASSES = Integer.getInteger("passes", 50);
 	private static final int STABLE_PASS = 3;
 	private static final int PASSES_PER_SEED = 3;
 
@@ -50,9 +52,12 @@ public class BenchmarkAccessSpeed {
 	private void go() {
 		long nextSeed = AccessSequence.SEED0;
 		int nextInitPass = 1;
-		Stats stats = new Stats();
+		Stats timeStats = new Stats();
+		CacheStats cacheStats = new CacheStats();
 		for (int pass = 1; pass <= PASSES; pass++) {
+			boolean newSeed = false;
 			if (pass >=  nextInitPass) {
+				newSeed = true;
 				init(nextSeed++);
 				nextInitPass = pass + PASSES_PER_SEED;
 			}
@@ -60,14 +65,19 @@ public class BenchmarkAccessSpeed {
 			double time = timePass();
 			System.out.printf(Locale.US, "%.3f ns per item", time);
 			if (pass >= STABLE_PASS) {
-				stats.add(time);
-				System.out.print(", avg " + stats);
+				timeStats.add(time);
+				System.out.print(", avg " + timeStats);
 			} else
 				 nextInitPass++;
 			System.out.printf(Locale.US, " (checksum %d)%n", lastCheckSum);
+			if (newSeed)
+				impl.collectStats(seq.access, cacheStats);
 		}
-		log.printf(Locale.US, "%-30s %2d : %7.3f +- %7.3f with %s (checksum %d)%n",
-			impl.describe(), stats.n(), stats.mean(), stats.dev(), seq, lastCheckSum);
+		String summary = String.format(Locale.US, "%-20s %2d : %7.3f +- %7.3f with %s (checksum %d) %s",
+			impl.describe(), timeStats.n(), timeStats.mean(), timeStats.dev(), seq,
+			lastCheckSum, cacheStats);
+		System.out.println(summary);
+		log.println(summary);
 	}
 
 	private void init(long seed) {

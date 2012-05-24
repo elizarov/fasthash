@@ -2,10 +2,10 @@ package fasthash.impl;
 
 import java.util.HashMap;
 
-import fasthash.model.Cache;
+import fasthash.model.AbstractCache;
 import fasthash.model.Order;
 
-public class HashMapCache implements Cache {
+public class HashMapCache extends AbstractCache {
 	private final HashMap<Long, Order> map = new HashMap<Long, Order>();
 
 	public int size() {
@@ -18,9 +18,5 @@ public class HashMapCache implements Cache {
 
 	public Order getById(long id) {
 		return map.get(id);
-	}
-
-	public String describe() {
-		return getClass().getSimpleName();
 	}
 }

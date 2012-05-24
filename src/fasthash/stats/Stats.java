@@ -1,11 +1,11 @@
-package fasthash.benchmark;
+package fasthash.stats;
 
 import java.util.Locale;
 
 /**
  * @author Roman Elizarov
  */
-class Stats {
+public class Stats {
 	private int n;
 	private double mean;
 	private double nvar;

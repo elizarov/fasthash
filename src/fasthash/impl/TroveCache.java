@@ -1,10 +1,10 @@
 package fasthash.impl;
 
-import fasthash.model.Cache;
+import fasthash.model.AbstractCache;
 import fasthash.model.Order;
 import gnu.trove.map.hash.TLongObjectHashMap;
 
-public class TroveCache implements Cache {
+public class TroveCache extends AbstractCache {
 	private final TLongObjectHashMap<Order> map = new TLongObjectHashMap<Order>();
 
 	public int size() {
@@ -17,9 +17,5 @@ public class TroveCache implements Cache {
 
 	public Order getById(long id) {
 		return map.get(id);
-	}
-
-	public String describe() {
-		return getClass().getSimpleName();
 	}
 }

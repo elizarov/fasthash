@@ -1,10 +1,10 @@
 package fasthash.impl;
 
 import com.carrotsearch.hppc.LongObjectOpenHashMap;
-import fasthash.model.Cache;
+import fasthash.model.AbstractCache;
 import fasthash.model.Order;
 
-public class HppcCache implements Cache {
+public class HppcCache extends AbstractCache {
 	private final LongObjectOpenHashMap<Order> map = new LongObjectOpenHashMap<Order>();
 
 	public int size() {
@@ -17,9 +17,5 @@ public class HppcCache implements Cache {
 
 	public Order getById(long id) {
 		return map.get(id);
-	}
-
-	public String describe() {
-		return HppcCache.class.getSimpleName();
 	}
 }

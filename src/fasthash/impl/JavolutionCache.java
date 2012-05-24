@@ -1,10 +1,10 @@
 package fasthash.impl;
 
-import fasthash.model.Cache;
+import fasthash.model.AbstractCache;
 import fasthash.model.Order;
 import javolution.util.FastMap;
 
-public class JavolutionCache implements Cache {
+public class JavolutionCache extends AbstractCache {
 	private final FastMap<Long, Order> map = new FastMap<Long, Order>();
 
 	public int size() {
@@ -17,9 +17,5 @@ public class JavolutionCache implements Cache {
 
 	public Order getById(long id) {
 		return map.get(id);
-	}
-
-	public String describe() {
-		return JavolutionCache.class.getSimpleName();
 	}
 }
