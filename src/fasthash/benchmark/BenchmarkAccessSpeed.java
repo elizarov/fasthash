@@ -86,11 +86,12 @@ public class BenchmarkAccessSpeed {
 		System.out.println("Created access sequence with seed " + seq);
 		System.out.println("Initializing " + implClassName + " ...");
 		impl = createImpl();
-		for (Order order : seq.orders) {
-			assert impl.getById(order.getId()) == null;
-			impl.addObject(order);
-		}
-		assert impl.size() == seq.orders.size();
+		/*
+		 * Note: Regular implementations do not use 'seq.access' to initialize themselves.
+		 * They just cache all 'seq.orders'.
+		 * 'seq.access' is only used by a base-line 'OrderList' implementation.
+		 */
+		impl.init(seq.orders, seq.access);
 		System.out.println("Initialized with " + impl.size() + " objects " + impl.describe());
 	}
 

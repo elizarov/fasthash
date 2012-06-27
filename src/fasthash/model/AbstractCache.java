@@ -1,5 +1,7 @@
 package fasthash.model;
 
+import java.util.List;
+
 import fasthash.stats.CacheStats;
 import fasthash.stats.ProbeCounter;
 
@@ -9,6 +11,14 @@ import fasthash.stats.ProbeCounter;
 public abstract class AbstractCache implements Cache {
 	public String describe() {
 		return getClass().getSimpleName();
+	}
+
+	public void init(List<Order> orders, long[] access) {
+		for (Order order : orders) {
+			assert getById(order.getId()) == null;
+			addObject(order);
+		}
+		assert size() == orders.size();
 	}
 
 	public void collectStats(long[] access, CacheStats stats) {
